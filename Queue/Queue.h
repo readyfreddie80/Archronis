@@ -11,6 +11,7 @@
 
 using namespace std;
 
+#define POISON 666
 
 template<class T>
 class Queue {
@@ -31,9 +32,10 @@ public:
     Queue(const Queue &) = delete;
     const Queue & operator=(const Queue &) = delete;
 
-    void enqueue(T *);      //to push
-    T *dequeue();           //to pop
-    bool isEmpty() const;   //is empty?
+    void enqueue(T *);       //to push
+    T *dequeue();            //to pop
+    bool isEmpty() const;    //is empty?
+    size_t getSize() const ; // get Size
 };
 
 

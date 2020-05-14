@@ -10,6 +10,7 @@ Queue<T>::Queue(size_t initSize, size_t maxChN)
          size(initSize),
          last(0),
          maxChildNumb(maxChN) {
+    assert(qArr);
     assert(initSize > 0);
     assert(maxChN > 1);
 }
@@ -17,6 +18,10 @@ Queue<T>::Queue(size_t initSize, size_t maxChN)
 template<class T>
 Queue<T>::~Queue() {
     delete[] qArr;
+    qArr = nullptr;
+    size = POISON;
+    last = POISON;
+    maxChildNumb = POISON;
 }
 
 template<class T>
@@ -55,6 +60,11 @@ T *Queue<T>::dequeue() {
 template<class T>
 bool Queue<T>::isEmpty() const {
     return last == 0;
+}
+
+template<class T>
+size_t Queue<T>::getSize() const {
+    return size;
 }
 
 

@@ -5,16 +5,12 @@
 #include "Tree.h"
 
 template <class Data>
-Tree<Data>::Tree() : root(new Node) {}
-
-template <class Data>
-Tree<Data>::Tree(Tree<Data>::Node *node) : root(node) {
-    assert(node);
-}
+Tree<Data>::Tree(const Data & d) : root(new Node(d)) {}
 
 template <class Data>
 Tree<Data>::~Tree() {
     deleteSubTree(root);
+    root = nullptr;
 }
 
 template <class Data>
@@ -38,7 +34,7 @@ typename Tree<Data>::Node *Tree<Data>::getRoot() const {
 }
 
 template <class Data>
-void Tree<Data>::setRootData(Data data) {
+void Tree<Data>::setRootData(const Data & data) {
     assert(root);
     root->data = data;
 }
