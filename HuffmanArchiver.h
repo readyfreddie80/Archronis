@@ -21,7 +21,7 @@ using namespace std;
 
 
 // Type name of variables holding filesizes in bytes
-typedef unsigned long long MY_SIZE_T;
+typedef unsigned long int MY_SIZE_T;
 
 // ASCII chars byte
 typedef unsigned char MY_BYTE;
@@ -29,9 +29,12 @@ typedef unsigned char MY_BYTE;
 //Number of ASCII chars
 const size_t ALPHABET_SIZE = 1 + std::numeric_limits<MY_BYTE>::max();
 
-// Size of thr name of the archive file
-const size_t ARCHIVE_NAME_SIZE = 32;
+const size_t BIT_SIZE = 8;
 
+const size_t BYTE_STEP = 256;
+
+//Name for the file with file names
+const string INFO_FILE_NAME = "HuffmanArchiverInfo";
 
 struct Letter {
     MY_SIZE_T frequency;
@@ -68,7 +71,26 @@ void CountLengthsOfCodes(const Tree<Letter>::Node       *root,
                                Vector<MY_BYTE>          &codeLengths,
                                MY_BYTE                  level);
 
+void WriteFileNames(      std::ofstream  &out,
+                    const Vector<string> &names);
 
+int WriteBinary(std::ofstream &out,
+                MY_SIZE_T     size);
+
+
+void WriteFilesSizes(      std::ofstream     &out,
+                     const Vector<MY_SIZE_T> &sizes,
+                     const Vector<string>    &names);
+
+
+void WriteEncodingInfo(const Vector<MY_BYTE>          &numberOfCodes,
+                       const Vector<Vector<MY_BYTE >> &lettersByLength,
+                             std::ofstream            &out);
+
+
+void WriteEncoding(      std::ifstream        &in,
+                         std::ofstream        &out,
+                   const Vector<Vector<bool>> &table);
 
 
 #endif //ARCHRONIS_HUFFMANARCHIVER_H

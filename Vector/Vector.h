@@ -29,6 +29,7 @@ private:
 
     int errNo_;
     int OK();
+    void resize();
     void dump() const;
 
     static const size_t RESIZE_COEF = 2; //coef for resizing queue arrray
@@ -46,6 +47,7 @@ public:
     size_t getSize() const { return size_; }
     size_t getMaxSize() const { return maxSize_; }
     void pushBack(const T& d);
+    void pushFront(const T& d);
 };
 
 
@@ -136,7 +138,7 @@ Vector<T>::Vector(const Vector<T> &that)
 
 
 template <class T>
-void Vector<T>::pushBack(const T &d) {
+void Vector<T>::resize() {
     if(size_ >= maxSize_) {
         size_t newSize = RESIZE_COEF * maxSize_;
         auto newBuf = new T [newSize];
@@ -146,11 +148,32 @@ void Vector<T>::pushBack(const T &d) {
         buf_ = newBuf;
         maxSize_ = newSize;
     }
+}
+
+template <class T>
+void Vector<T>::pushBack(const T &d) {
+
+    resize();
 
     buf_[size_] = d;
 
     ++size_;
 }
+
+template <class T>
+void Vector<T>::pushFront(const T &d) {
+
+    resize();
+
+    for (size_t i = size_; i != 0 ; i--) {
+        buf_[i] = buf_[i - 1];
+    }
+
+    buf_[0] = d;
+
+    size_++;
+}
+
 
 template <class T>
 int Vector<T>::OK () {
