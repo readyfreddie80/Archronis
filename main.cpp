@@ -1,6 +1,7 @@
 #include <iostream>
-#include <assert.h>
+
 #include "HuffmanArchiver.h"
+
 
 using namespace std;
 
@@ -12,11 +13,16 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    char archName[ARCHIVE_NAME_SIZE];
+    Vector<string> filesNames;
+    for(size_t i = 1; i < argc; ++i) {
+        filesNames.pushBack(string(argv[i]));
+    }
+
     cout << "Please, input the name of the archive" << endl;
+    string archName;
     cin >> archName;
 
-    HuffmanCompress(*argv[1], argc - 1, archName);
+    HuffmanCompress(filesNames, archName);
 
     return 0;
 }

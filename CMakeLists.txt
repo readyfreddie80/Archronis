@@ -4,4 +4,4 @@ project(Archronis)
 set(CMAKE_CXX_STANDARD 14)
 
 add_executable(Archronis main.cpp HuffmanArchiver.cpp HuffmanArchiver.h
-        Tree/Tree.cpp Tree/Tree.h Queue/Queue.cpp Queue/Queue.h Vector/Vector.cpp Vector/Vector.h)
+        Tree/Tree.h Queue/Queue.h Vector/Vector.h Debug.h Vector/Vector.cpp)

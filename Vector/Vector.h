@@ -9,25 +9,14 @@
 #include <cstdlib>
 #include <assert.h>
 #include <algorithm>
+#include <string>
+
+using namespace std;
 
 #define POISON 666
 
 #define VECTOR_OK() if (OK() != 0) {dump(); assert(!"ok");}
 
-
-enum Err {
-    E_OK,                   // Vector is valid;
-    E_NULL_PTR_BUF,         // Vector is pointed by NULL;
-    E_INVALID_SIZE,         // size is invalid;
-    E_INVALID_MAXSIZE,      // maxSize is invalid;
-};
-
-const char* errMessage[] = {
-        "vector is OK",
-        "buffer of vector is nullptr",
-        "maxSize is 0",
-        "size is more than maxSize",
-};
 
 using namespace std;
 
@@ -59,6 +48,129 @@ public:
     void pushBack(const T& d);
 };
 
+
+enum Err {
+    E_OK,                   // Vector is valid;
+    E_NULL_PTR_BUF,         // Vector is pointed by NULL;
+    E_INVALID_SIZE,         // size is invalid;
+    E_INVALID_MAXSIZE,      // maxSize is invalid;
+};
+
+
+template <class T>
+Vector<T>::Vector(size_t size)
+        :
+        buf_( new T[max<size_t>(size, 1)] ),
+        size_(size),
+        maxSize_(max<size_t>(size, 1)),
+        errNo_(E_OK) {
+
+
+#ifdef DEBUG
+    VECTOR_OK();
+#else
+    assert(buf_);
+    assert(maxSize_ > 0);
+#endif
+}
+
+template <class T>
+Vector<T>::Vector(size_t size, const T & initialVal) : Vector(size) {
+    assert(size > 0);
+    for(size_t i = 0; i < size; ++i) {
+        buf_[i] = initialVal;
+    }
+#ifdef DEBUG
+    VECTOR_OK();
+#endif
+}
+
+
+template <class T>
+Vector<T>::~Vector() {
+
+    delete [] buf_;
+    buf_ = nullptr;
+    size_ = POISON;
+    maxSize_ = POISON;
+}
+
+template <class T>
+T & Vector<T>::operator [](int index) {
+#ifdef DEBUG
+    VECTOR_OK();
+#else
+    assert(index >= 0);
+    assert(index < size_);
+#endif
+
+    return buf_[index];
+}
+
+template <class T>
+const T & Vector<T>::operator [](int index) const {
+    assert(index >= 0);
+    assert(index < size_);
+
+    return buf_[index];
+}
+
+template <class T>
+Vector<T>::Vector(const Vector<T> &that)
+        :
+        buf_( new T[that.getMaxSize()] ),
+        size_(that.getSize()),
+        maxSize_(that.getMaxSize()),
+        errNo_(E_OK) {
+
+#ifdef DEBUG
+    VECTOR_OK();
+#else
+    assert(buf_ != nullptr);
+    assert(maxSize_ > 0);
+#endif
+    for (size_t i = 0; i < size_; ++i) {
+        buf_[i] = that[i];
+    }
+}
+
+
+template <class T>
+void Vector<T>::pushBack(const T &d) {
+    if(size_ >= maxSize_) {
+        size_t newSize = RESIZE_COEF * maxSize_;
+        auto newBuf = new T [newSize];
+        for(size_t i = 0; i < maxSize_; ++i)
+            newBuf[i] = buf_[i];
+        delete[] buf_;
+        buf_ = newBuf;
+        maxSize_ = newSize;
+    }
+
+    buf_[size_] = d;
+
+    ++size_;
+}
+
+template <class T>
+int Vector<T>::OK () {
+    if (buf_ == nullptr) {
+        errNo_ = E_NULL_PTR_BUF;
+        return E_NULL_PTR_BUF;
+    }
+
+    if (maxSize_  == 0) {
+        errNo_ = E_INVALID_MAXSIZE;
+        return E_INVALID_MAXSIZE;
+    }
+
+    if (size_ > maxSize_) {
+        errNo_ = E_INVALID_SIZE;
+        return E_INVALID_SIZE;
+    }
+
+    return E_OK;
+}
 
 
 
