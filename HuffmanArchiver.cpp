@@ -25,7 +25,7 @@ int HuffmanCompress(const Vector<string> &filesNames,
 
     //Create an info file to save the names of files for compressing
     ofstream infoFile(INFO_FILE_NAME, ios::out | ios::binary);
-    if (!archive.is_open()) {
+    if (!infoFile.is_open()) {
         cerr << "Can't create an info file the name: "
              << INFO_FILE_NAME << endl;
         return 1;
@@ -146,6 +146,13 @@ int HuffmanCompress(const Vector<string> &filesNames,
     for(size_t i = 0; i < fileStreams.getSize(); i++) {
         WriteEncoding(fileStreams[i], archive, table);
         fileStreams[i].close();
+    }
+
+
+    if (remove(INFO_FILE_NAME) != 0) {
+        cerr << "Error of removing file "
+             << INFO_FILE_NAME
+             << endl;
     }
 
     archive.close();
@@ -359,7 +366,7 @@ void WriteEncoding(      std::ifstream        &in,
         if(in.eof()) break;
 
         for(int i = table[c].getSize() - 1; i >= 0; --i) {
-            buf |=  (table[c][i]) << (BIT_SIZE - 1 - count);
+            buf |=  table[c][i] << (BIT_SIZE - 1 - count);
             ++count;
 
             if (count == BIT_SIZE)  {
@@ -380,14 +387,216 @@ void WriteEncoding(      std::ifstream        &in,
 }
 
 
-void readBinary(std::ifstream &in,
-           MY_SIZE_T &num) {
-    num = 0;
+MY_SIZE_T ReadBinary(std::ifstream &in){
+    assert(in.is_open());
+
+    MY_SIZE_T num = 0;
     MY_BYTE c = 0;
-    for(int k = 3; k != -1; --k)
-    {
-        c = in.get();
-        num += c * (1 << (8 * k));
+    for(int k = 3; k != -1; --k) {
+        c = static_cast<MY_BYTE>(in.get());
+        num += c * (1 << (BIT_SIZE * k));
+    }
+
+    return num;
+}
+
+Vector<Vector<MY_BYTE>> ReadDecodingInfo(std::ifstream  &in,
+                                        Vector<MY_BYTE >   &numberOfCodes,
+                                     Vector<MY_BYTE >   &letters,
+                                     Vector<MY_SIZE_T>  &sizes) {
+    assert(in.is_open());
+
+    MY_SIZE_T fileNumb = ReadBinary(in);
+
+    for(size_t i = 0; i < fileNumb; ++i) {
+        sizes.pushBack(ReadBinary(in));
+    }
+
+
+    auto maxLength = static_cast<MY_BYTE>(in.get());
+    for (MY_BYTE i = 1; i <= maxLength; ++i) {
+        numberOfCodes.pushBack(static_cast<MY_BYTE>(in.get()));
+    }
+
+    Vector<Vector<MY_BYTE>> lettersByLength(maxLength + 1);
+
+    for (size_t l = 1; l < lettersByLength.getSize(); ++l) {
+        for (MY_BYTE i = 0; i != numberOfCodes[l]; ++i) {
+            auto c = static_cast<MY_BYTE>(in.get());
+            lettersByLength[l].pushBack(c);
+            letters.pushBack(c);
+        }
+    }
+
+    return lettersByLength;
+}
+
+
+const Tree<Letter> * BuildDecodeTree(const Vector<MY_BYTE>      &letters,
+                                     const Vector<Vector<bool>> &table)
+{
+    auto *root = new Tree<Letter>(Letter());
+    for (size_t l = 0; l < letters.getSize(); ++l) {
+        int size = table[letters[l]].getSize();
+        Tree<Letter>::Node *cur = root->getRoot();
+        for (int bit = size - 1; bit != -1; --bit) {
+            if (table[letters[l]][bit]) { // go right
+                if (!cur->rightChild) {
+                    auto *R = new Tree<Letter>::Node(Letter());
+                    cur->rightChild = R;
+                }
+                cur = cur->rightChild;
+            }
+            else { //go left
+                if (!cur->leftChild) {
+                    auto *L = new Tree<Letter>::Node(Letter());
+                    cur->leftChild = L;
+                }
+                cur = cur->leftChild;
+            }
+        }
+        cur->data.letter = letters[l]; //leaf
+    }
+    return root;
+}
+
+
+void WriteDcoding (std::ifstream &in,
+                   std::ofstream &out,
+                   const Tree<Letter>::Node *root,
+                   MY_SIZE_T size) {
+    assert(root);
+    assert(in.is_open());
+    assert(out.is_open());
+
+    const Tree<Letter>::Node *cur = root;
+    size_t count = 0;
+    MY_SIZE_T fileSize = 0;
+
+    auto byte = static_cast<MY_BYTE>(in.get());
+    while (!in.eof()) {
+        bool b = static_cast<bool>(byte & (1 << (BIT_SIZE - 1 - count)));
+        if (b) {
+            cur = cur->rightChild;
+        }
+        else {
+            cur = cur->leftChild;
+        }
+        if (!cur->leftChild && !cur->rightChild) {
+            out.put(cur->data.letter);
+            ++fileSize;
+            cur = root;
+        }
+        ++count;
+
+        if (fileSize == size)
+            break;
+
+        if (count == BIT_SIZE) {
+            count = 0;
+            byte = static_cast<MY_BYTE>(in.get());
+        }
     }
 }
 
+
+int HuffmanDecompress(const string &archiveName) {
+
+
+    ifstream archive(archiveName, ios::in | ios::binary);
+    if (!archive.is_open()) {
+        cerr << "Can't open an archive with the name: "
+             << archiveName << endl;
+        return 1;
+    }
+
+    Vector<MY_BYTE> numberOfCodes(1, 0);
+    Vector<MY_BYTE> letters;
+    Vector<MY_SIZE_T> fileSizes;
+
+    Vector<Vector<MY_BYTE>> lettersByLength = ReadDecodingInfo(archive,
+                                                               numberOfCodes,
+                                                               letters,
+                                                               fileSizes);
+
+#ifdef DEBUG
+    printVector(fileSizes, "File sizes:");
+#endif
+
+    Vector<MY_BYTE> firstCodes(numberOfCodes.getSize(), 0);
+    ComputeFirstCodesForLengths(numberOfCodes, firstCodes);
+
+#ifdef DEBUG
+    printFirstCode(firstCodes);
+#endif
+
+    Vector<Vector<bool>> table(ALPHABET_SIZE);
+    BuildTable(numberOfCodes,
+               firstCodes,
+               lettersByLength,
+               table);
+#ifdef DEBUG
+    printCodes(table);
+#endif
+
+    const Tree<Letter> *root = BuildDecodeTree(letters, table);
+
+#ifdef DEBUG
+    printTree(root->getRoot(), 0);
+#endif
+
+    ofstream infoFile(INFO_FILE_NAME, ios::out | ios::binary);
+    if (!infoFile.is_open()) {
+        cerr << "Can't create an info file the name: "
+             << INFO_FILE_NAME << endl;
+        return 1;
+    }
+    WriteDcoding(archive, infoFile, root->getRoot(), fileSizes[0]);
+    infoFile.close();
+
+
+    ifstream infoFileRead(INFO_FILE_NAME, ios::in | ios::binary);
+    if (!archive.is_open()) {
+        cerr << "Can't open an info file the name: "
+             << INFO_FILE_NAME << endl;
+        return 1;
+    }
+
+    Vector<string> fileNames;
+    for(size_t i = 0; i < fileSizes.getSize() - 1; ++i) {
+        string name;
+        getline(infoFileRead, name, '|');
+        fileNames.pushBack(name);
+    }
+    infoFileRead.close();
+
+#ifdef DEBUG
+    printVector(fileNames, "File names:");
+#endif
+
+    Vector<ofstream> fileStreams(fileNames.getSize());
+    for(size_t i = 0; i < fileStreams.getSize(); i++) {
+        // Open the current file
+        fileStreams[i].open(fileNames[i],
+                            ios::out | ios::binary);
+
+        if (!fileStreams[i].is_open()) {
+            cerr << "Can't open file to decompress: "
+                 << fileNames[i] << endl;
+            return 1;
+        }
+
+        WriteDcoding(archive, fileStreams[i], root->getRoot(), fileSizes[i + 1]);
+    }
+
+    if (remove(INFO_FILE_NAME) != 0) {
+        cerr << "Error of removing file "
+             << INFO_FILE_NAME
+             << endl;
+    }
+
+    archive.close();
+
+    delete root;
+    return 0;
+}

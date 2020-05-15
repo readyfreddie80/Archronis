@@ -11,10 +11,12 @@
 #include <limits>
 #include <algorithm>
 #include <string>
+#include <cstdio>
 
 #include "Tree/Tree.h"
 #include "Queue/Queue.h"
 #include "Vector/Vector.h"
+
 
 
 using namespace std;
@@ -34,7 +36,7 @@ const size_t BIT_SIZE = 8;
 const size_t BYTE_STEP = 256;
 
 //Name for the file with file names
-const string INFO_FILE_NAME = "HuffmanArchiverInfo";
+const char INFO_FILE_NAME[] = "HuffmanArchiverInfo";
 
 struct Letter {
     MY_SIZE_T frequency;
@@ -51,6 +53,8 @@ struct Letter {
 
 int HuffmanCompress(const Vector<string> &filesNames,
                     const string         &archiveName);
+
+int HuffmanDecompress(const string &archiveName);
 
 
 MY_SIZE_T UpdateLettersFreqs(ifstream           &file,

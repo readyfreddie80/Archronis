@@ -42,12 +42,17 @@ public:
     const T & operator [](int index) const;
     Vector(const Vector &that);
 
-    Vector & operator =(const Vector& that) = delete;
+    Vector & operator =(const Vector& that);
+
+    template <class M>
+    friend ostream& operator<<(ostream& os, const Vector<M>& v);
 
     size_t getSize() const { return size_; }
     size_t getMaxSize() const { return maxSize_; }
     void pushBack(const T& d);
     void pushFront(const T& d);
+
+
 };
 
 
@@ -135,7 +140,33 @@ Vector<T>::Vector(const Vector<T> &that)
         buf_[i] = that[i];
     }
 }
+template <class T>
+Vector<T> & Vector<T>::operator =(const Vector& that) {
+    if (this == &that) return *this;
 
+    if (that.getSize() <= maxSize_) {
+
+        for (size_t i = 0; i < that.getSize(); ++i) {
+            buf_[i] = that[i];
+        }
+        size_ = that.getSize();
+        return *this;
+
+    }
+
+    T* newBuf = new T[that.size_];
+
+    for (size_t i = 0; i < that.getSize(); ++i) {
+        newBuf[i] = that[i];
+    }
+
+    delete [] buf_;
+    buf_ = newBuf;
+    size_ = that.getSize();
+    maxSize_ = that.getSize();
+
+    return *this;
+ }
 
 template <class T>
 void Vector<T>::resize() {
@@ -174,6 +205,13 @@ void Vector<T>::pushFront(const T &d) {
     size_++;
 }
 
+template <class T>
+ostream& operator<<(ostream& os, const Vector<T>& v) {
+    for(size_t i = 0; i < v.getSize(); ++i) {
+        os << v[i] << endl;
+    }
+    return os;
+}
 
 template <class T>
 int Vector<T>::OK () {

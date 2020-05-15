@@ -78,4 +78,13 @@ void printCodes(const Vector<Vector<bool>> &table) {
     }
 }
 
+template <class T>
+void printVector(const Vector<T> &v,
+                 const string    &msg) {
+
+    cout << msg << endl;
+    cout << v;
+}
+
+
 #endif //ARCHRONIS_DEBUG_H
