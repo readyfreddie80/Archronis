@@ -11,14 +11,11 @@
 #include <algorithm>
 #include <string>
 
-using namespace std;
 
 #define POISON 666
 
 #define VECTOR_OK() if (OK() != 0) {dump(); assert(!"ok");}
 
-
-using namespace std;
 
 template <class T>
 struct Vector {
@@ -37,6 +34,7 @@ private:
 public:
     explicit Vector(size_t = 0);
     Vector(size_t size, const T & initialVal);
+    Vector(std::initializer_list<T> l);
     ~Vector();
     T & operator [](int index);
     const T & operator [](int index) const;
@@ -80,6 +78,14 @@ Vector<T>::Vector(size_t size)
     assert(maxSize_ > 0);
 #endif
 }
+
+
+template <class T>
+Vector<T>:: Vector(std::initializer_list<T> l)
+    : Vector(static_cast<size_t>(l.size())) {
+        std::copy(l.begin(), l.end(), buf_);
+}
+
 
 template <class T>
 Vector<T>::Vector(size_t size, const T & initialVal) : Vector(size) {

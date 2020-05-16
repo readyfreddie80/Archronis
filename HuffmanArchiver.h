@@ -51,50 +51,63 @@ struct Letter {
 
 };
 
-int HuffmanCompress(const Vector<string> &filesNames,
-                    const string         &archiveName);
+int HuffmanCompress(
+        const Vector<string> &filesNames,
+        const string         &archiveName);
+
+
 
 int HuffmanDecompress(const string &archiveName);
 
 
-MY_SIZE_T UpdateLettersFreqs(ifstream           &file,
-                             Vector<MY_SIZE_T>  &lettersFreqs);
+MY_SIZE_T UpdateLettersFreqs(
+        ifstream           &file,
+        Vector<MY_SIZE_T>  &lettersFreqs);
 
-const Tree<Letter> *BuildEncodeTree(const Vector<MY_SIZE_T>  &lettersFreqs,
-                                          size_t             alphSize);
+const Tree<Letter> *BuildEncodeTree(
+        const Vector<MY_SIZE_T>  &lettersFreqs,
+              size_t             alphSize);
 
-void ComputeFirstCodesForLengths(const Vector<MY_BYTE> &numberOfCodes,
-                                       Vector<MY_BYTE> &firstCode);
+void ComputeFirstCodesForLengths(
+        const Vector<MY_BYTE> &numberOfCodes,
+              Vector<MY_BYTE> &firstCode);
 
-void BuildTable(const Vector<MY_BYTE>          &numberOfCodes,
-                const Vector<MY_BYTE>          &firstCode,
-                const Vector<Vector<MY_BYTE >> &lettersByLength,
-                      Vector<Vector<bool>>     &table);
+void BuildTable(
+        const Vector<MY_BYTE>          &numberOfCodes,
+        const Vector<MY_BYTE>          &firstCode,
+        const Vector<Vector<MY_BYTE >> &lettersByLength,
+        Vector<Vector<bool>>     &table);
 
-void CountLengthsOfCodes(const Tree<Letter>::Node       *root,
-                               Vector<MY_BYTE>          &codeLengths,
-                               MY_BYTE                  level);
+void CountLengthsOfCodes(
+        const Tree<Letter>::Node       *root,
+        Vector<MY_BYTE>          &codeLengths,
+        MY_BYTE                  level);
 
-void WriteFileNames(      std::ofstream  &out,
-                    const Vector<string> &names);
+void WriteFileNames(
+        std::ofstream  &out,
+        const Vector<string> &names);
 
-int WriteBinary(std::ofstream &out,
-                MY_SIZE_T     size);
-
-
-void WriteFilesSizes(      std::ofstream     &out,
-                     const Vector<MY_SIZE_T> &sizes,
-                     const Vector<string>    &names);
-
-
-void WriteEncodingInfo(const Vector<MY_BYTE>          &numberOfCodes,
-                       const Vector<Vector<MY_BYTE >> &lettersByLength,
-                             std::ofstream            &out);
+int WriteBinary(
+        std::ofstream &out,
+        MY_SIZE_T     size);
 
 
-void WriteEncoding(      std::ifstream        &in,
-                         std::ofstream        &out,
-                   const Vector<Vector<bool>> &table);
+void WriteFilesSizes(
+        std::ofstream     &out,
+        const Vector<MY_SIZE_T> &sizes,
+        const Vector<string>    &names);
+
+
+void WriteEncodingInfo(
+        const Vector<MY_BYTE>          &numberOfCodes,
+        const Vector<Vector<MY_BYTE >> &lettersByLength,
+        std::ofstream            &out);
+
+
+void WriteEncoding(
+        std::ifstream        &in,
+        std::ofstream        &out,
+        const Vector<Vector<bool>> &table);
 
 
 #endif //ARCHRONIS_HUFFMANARCHIVER_H
