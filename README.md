@@ -1,8 +1,8 @@
 # Archronis
 
 The program uses static Huffman`s coding for:
-- compressing of N files (N >= 1) to an achive
-- decompressing of an archive 
+- compressing N files (N >= 1) to an archive
+- decompressing an archive 
 
 Vector, (inreasing priority) Queue, Tree and the nessesary operations on them are implemented from the scratch 
 
