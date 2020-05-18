@@ -5,21 +5,16 @@
 #ifndef ARCHRONIS_VECTOR_H
 #define ARCHRONIS_VECTOR_H
 
+#include <iostream>
 #include <stdio.h>
-#include <cstdlib>
 #include <assert.h>
-#include <algorithm>
-#include <string>
-
-
-#define POISON 666
+#include <algorithm> //max
 
 #define VECTOR_OK() if (OK() != 0) {dump(); assert(!"ok");}
 
-
 template <class T>
 struct Vector {
-private:
+protected:
     T *buf_;
     size_t size_;
     size_t maxSize_;
@@ -27,30 +22,30 @@ private:
     int errNo_;
     int OK();
     void resize();
-    void dump() const;
+    void dump() const {}
 
-    static const size_t RESIZE_COEF = 2; //coef for resizing queue arrray
+    static const size_t POISON = 666;
+    static const size_t RESIZE_COEF = 2; //coef for resizing arrray
 
 public:
     explicit Vector(size_t = 0);
     Vector(size_t size, const T & initialVal);
     Vector(std::initializer_list<T> l);
-    ~Vector();
-    T & operator [](int index);
-    const T & operator [](int index) const;
     Vector(const Vector &that);
-
+    ~Vector();
     Vector & operator =(const Vector& that);
 
+    T & operator [](int index);
+    const T & operator [](int index) const;
+
     template <class M>
-    friend ostream& operator<<(ostream& os, const Vector<M>& v);
+    friend std::ostream& operator<<(std::ostream& os, const Vector<M>& v);
 
     size_t getSize() const { return size_; }
     size_t getMaxSize() const { return maxSize_; }
+
     void pushBack(const T& d);
     void pushFront(const T& d);
-
-
 };
 
 
@@ -65,9 +60,9 @@ enum Err {
 template <class T>
 Vector<T>::Vector(size_t size)
         :
-        buf_( new T[max<size_t>(size, 1)] ),
+        buf_( new T[std::max<size_t>(size, 1)] ),
         size_(size),
-        maxSize_(max<size_t>(size, 1)),
+        maxSize_(std::max<size_t>(size, 1)),
         errNo_(E_OK) {
 
 
@@ -108,6 +103,7 @@ Vector<T>::~Vector() {
     maxSize_ = POISON;
 }
 
+
 template <class T>
 T & Vector<T>::operator [](int index) {
 #ifdef DEBUG
@@ -120,6 +116,7 @@ T & Vector<T>::operator [](int index) {
     return buf_[index];
 }
 
+
 template <class T>
 const T & Vector<T>::operator [](int index) const {
     assert(index >= 0);
@@ -127,6 +124,7 @@ const T & Vector<T>::operator [](int index) const {
 
     return buf_[index];
 }
+
 
 template <class T>
 Vector<T>::Vector(const Vector<T> &that)
@@ -146,6 +144,8 @@ Vector<T>::Vector(const Vector<T> &that)
         buf_[i] = that[i];
     }
 }
+
+
 template <class T>
 Vector<T> & Vector<T>::operator =(const Vector& that) {
     if (this == &that) return *this;
@@ -174,8 +174,9 @@ Vector<T> & Vector<T>::operator =(const Vector& that) {
     return *this;
  }
 
-template <class T>
-void Vector<T>::resize() {
+
+ template <class T>
+ void Vector<T>::resize() {
     if(size_ >= maxSize_) {
         size_t newSize = RESIZE_COEF * maxSize_;
         auto newBuf = new T [newSize];
@@ -187,6 +188,7 @@ void Vector<T>::resize() {
     }
 }
 
+
 template <class T>
 void Vector<T>::pushBack(const T &d) {
 
@@ -196,6 +198,7 @@ void Vector<T>::pushBack(const T &d) {
 
     ++size_;
 }
+
 
 template <class T>
 void Vector<T>::pushFront(const T &d) {
@@ -212,12 +215,13 @@ void Vector<T>::pushFront(const T &d) {
 }
 
 template <class T>
-ostream& operator<<(ostream& os, const Vector<T>& v) {
+std::ostream& operator<<(std::ostream& os, const Vector<T>& v) {
     for(size_t i = 0; i < v.getSize(); ++i) {
-        os << v[i] << endl;
+        os << v[i] << std::endl;
     }
     return os;
 }
+
 
 template <class T>
 int Vector<T>::OK () {
@@ -238,7 +242,5 @@ int Vector<T>::OK () {
 
     return E_OK;
 }
-
-
 
 #endif //ARCHRONIS_VECTOR_H

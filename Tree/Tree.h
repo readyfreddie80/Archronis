@@ -37,7 +37,6 @@ public:
     bool operator>(const Tree &) const;
 
 private:
-
     Node *root;
 
     void deleteSubTree(Node *node);
@@ -65,7 +64,9 @@ void Tree<Data>::deleteSubTree(Tree<Data>::Node *node) {
 
 template <class Data>
 Data Tree<Data>::getRootData() const {
+#ifdef DEBUG
     assert(root);
+#endif
     return root->data;
 }
 
@@ -76,7 +77,9 @@ typename Tree<Data>::Node *Tree<Data>::getRoot() const {
 
 template <class Data>
 void Tree<Data>::setRootData(const Data & data) {
+#ifdef DEBUG
     assert(root);
+#endif
     root->data = data;
 }
 
@@ -87,20 +90,26 @@ void Tree<Data>::setRoot(Tree<Data>::Node *node) {
 
 template <class Data>
 void Tree<Data>::setLeft(Tree<Data>::Node *node) {
+#ifdef DEBUG
     assert(root);
+#endif
     root->leftChild = node;
 }
 
 template <class Data>
 void Tree<Data>::setRight(Tree<Data>::Node *node) {
+#ifdef DEBUG
     assert(root);
+#endif
     root->rightChild = node;
 }
 
 template <class Data>
 bool Tree<Data>::operator>(const Tree & T) const {
+#ifdef DEBUG
     assert(root);
     assert(T.root);
+#endif
     return (root->data > T.root->data);
 }
 

@@ -5,13 +5,9 @@
 #ifndef ARCHRONIS_QUEUE_H
 #define ARCHRONIS_QUEUE_H
 
-#include <stddef.h>
 #include <assert.h>
 #include <iostream>
 
-using namespace std;
-
-#define POISON 666
 
 template<class T>
 class Queue {
@@ -22,6 +18,7 @@ private:
     size_t maxChildNumb;     //max number of children in the heap
 
     static const size_t RESIZE_COEF = 2; //coef for resizing queue arrray
+    static const size_t POISON = 666;
 
     void reheapUp(size_t root, size_t bottom);   // reheap upwards
     void reheapDown(size_t root, size_t bottom); // reheap downwards
@@ -44,9 +41,11 @@ Queue<T>::Queue(size_t initSize, size_t maxChN)
          size(initSize),
          last(0),
          maxChildNumb(maxChN) {
+#ifdef DEBUG
     assert(qArr);
     assert(initSize > 0);
     assert(maxChN > 1);
+#endif
 }
 
 template<class T>
@@ -78,7 +77,7 @@ void Queue<T>::enqueue(T *newData) {
 template<class T>
 T *Queue<T>::dequeue() {
     if(isEmpty()) {
-        cerr << "Dequeue error: Queue is empty" << endl;
+        std::cerr << "Dequeue error: Queue is empty" << std::endl;
         exit(1);
     }
 
@@ -110,7 +109,7 @@ void Queue<T>::reheapUp(size_t root, size_t bottom) {
         size_t parent = (bottom - 1) / maxChildNumb;
 
         if(*qArr[parent] > *qArr[bottom]) {
-            swap(qArr[parent], qArr[bottom]);
+            std::swap(qArr[parent], qArr[bottom]);
             reheapUp(root, parent);
         }
     }
@@ -134,7 +133,7 @@ void Queue<T>::reheapDown(size_t root, size_t bottom) {
         }
 
         if(*qArr[root] > *qArr[minChild]) {
-            swap(qArr[root], qArr[minChild]);
+            std::swap(qArr[root], qArr[minChild]);
             reheapDown(minChild, bottom);
         }
     }
