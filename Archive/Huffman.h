@@ -132,7 +132,7 @@ protected:
                   size_t             size);
 
     class Binary {
-        static const size_t MAX_NUMB = ULONG_MAX;
+        static const size_t MAX_NUMB = 4294967295;
         static const size_t BYTES_NUMB = 4;
     public:
         int WriteBinary(

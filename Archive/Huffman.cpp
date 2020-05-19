@@ -274,6 +274,12 @@ const Tree<Huffman::Letter> * Huffman::BuildEncodeTree(const Vector<size_t> &let
         parent->setLeft(Left->getRoot());
         parent->setRight(Right->getRoot());
 
+        Left->setRoot(nullptr);
+        Right->setRoot(nullptr);
+
+        delete Left;
+        delete Right;
+
         Q.enqueue(parent);
     }
 
