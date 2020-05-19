@@ -37,7 +37,7 @@ void Archiver::Compress(
     huffman.Compress(filesToCompress, archiveStream);
 }
 
-void Archiver::Decompress(const std::string &archiveName) {
+Vector<std::string> Archiver::Decompress(const std::string &archiveName) {
 #ifdef DEBUG
     assert(!archiveName.empty());
 #endif
@@ -49,6 +49,19 @@ void Archiver::Decompress(const std::string &archiveName) {
 
     InfoFile infoFile{INFO_FILE_NAME};
 
-    huffman.Decompress(archiveStream, infoFile);
+    Vector<std::string> filesNames;
 
+    try {
+        filesNames = huffman.Decompress(archiveStream, infoFile);
+    }
+    catch (Huffman::HuffmanExceptionInvalidArchive &err) {
+        std::cerr << "Invalid Archive: "
+                  << archiveName
+                  << std::endl
+                  << err.what()
+                  << std::endl;
+        exit(1);
+    }
+
+    return filesNames;
 }

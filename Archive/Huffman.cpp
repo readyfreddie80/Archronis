@@ -2,11 +2,17 @@
 // Created by ready on 17.05.2020.
 //
 
+
+//#define DEBUG
+
 #include "Huffman.h"
+
+#include <sstream>
 
 #ifdef DEBUG
 #include "Debug.h"
 #endif
+
 
 #include "../Queue/Queue.h"
 
@@ -114,7 +120,7 @@ void Huffman::Compress(
     delete encodeTree;
 }
 
-void Huffman::Decompress(
+Vector<std::string> Huffman::Decompress(
               std::fstream &archive,
         const InfoFile     &infoFile) {
 
@@ -175,6 +181,16 @@ void Huffman::Decompress(
 #ifdef DEBUG
     printVector(fileNames, "File names:");
 #endif
+
+    if(fileNames.getSize() != fileSizes.getSize() - 1) {
+        std::stringstream s;
+        s << __func__
+          << " : "
+          << "different numbers of files in InfoFile and in DecodingInfo";
+        throw Huffman::HuffmanExceptionInvalidArchive(s.str());
+    }
+
+
     for(size_t i = 0; i < fileNames.getSize(); i++) {
         std::fstream stream;
         File file{fileNames[i]};
@@ -187,6 +203,8 @@ void Huffman::Decompress(
     }
 
     delete root;
+
+    return fileNames;
 }
 
 
@@ -466,14 +484,33 @@ Vector<Vector<Huffman::BYTE>> Huffman::ReadDecodingInfo(
     Binary binary;
     size_t fileNumb = binary.ReadBinary(in);
 
+    if (fileNumb < 2) {
+        std::stringstream s;
+        s << __func__
+          << " : "
+          << "file number is "
+          << fileNumb;
+        throw HuffmanExceptionInvalidArchive(s.str());
+    }
+
     for(size_t i = 0; i < fileNumb; ++i) {
         sizes.pushBack(binary.ReadBinary(in));
     }
 
-
     auto maxLength = static_cast<BYTE>(in.get());
+
+    if (maxLength == 0) {
+        std::stringstream s;
+        s << __func__
+          << " : "
+          << "max code length number is "
+          << maxLength;
+        throw HuffmanExceptionInvalidArchive(s.str());
+    }
+
     for (BYTE i = 1; i <= maxLength; ++i) {
         numberOfCodes.pushBack(static_cast<BYTE>(in.get()));
+        CheckReadingUnexpectedEndOfFile(__func__, in);
     }
 
     Vector<Vector<BYTE >> lettersByLength(maxLength + 1);
@@ -481,6 +518,21 @@ Vector<Vector<Huffman::BYTE>> Huffman::ReadDecodingInfo(
     for (size_t l = 1; l < lettersByLength.getSize(); ++l) {
         for (BYTE i = 0; i != numberOfCodes[l]; ++i) {
             auto c = static_cast<BYTE>(in.get());
+
+            CheckReadingUnexpectedEndOfFile(__func__, in);
+
+            size_t lSize = lettersByLength[l].getSize();
+            if (lSize != 0) {
+                if (c <= lettersByLength[l][lSize - 1]) {
+                    std::stringstream s;
+                    s << __func__
+                      << " : "
+                      << "Letters for lenght "
+                      << l
+                      << " are not in the increasing order";
+                    throw HuffmanExceptionInvalidArchive(s.str());
+                }
+            }
             lettersByLength[l].pushBack(c);
             letters.pushBack(c);
         }
@@ -550,28 +602,32 @@ void Huffman::WriteDecoding (
     size_t fileSize = 0;
 
     auto byte = static_cast<BYTE >(in.get());
-    while (!in.eof()) {
-        bool b = static_cast<bool>(byte & (1 << (BYTE_SIZE- 1 - count)));
-        if (b) {
-            cur = cur->rightChild;
+    while (fileSize != size) {
+        if (count == BYTE_SIZE) {
+            byte = static_cast<BYTE>(in.get());
+            count = 0;
         }
-        else {
-            cur = cur->leftChild;
+        CheckReadingUnexpectedEndOfFile(__func__, in);
+
+        auto b = static_cast<bool>(byte & (1 << (BYTE_SIZE - 1 - count)));
+
+        cur = b ? cur->rightChild : cur->leftChild;
+
+        if (!cur) {
+            std::stringstream s;
+            s << __func__
+              << " : "
+              << "wrong coding";
+            throw Huffman::HuffmanExceptionInvalidArchive(s.str());
         }
+
         if (!cur->leftChild && !cur->rightChild) {
             out.put(cur->data.letter);
             ++fileSize;
             cur = root;
         }
+
         ++count;
-
-        if (fileSize == size)
-            break;
-
-        if (count == BYTE_SIZE) {
-            count = 0;
-            byte = static_cast<BYTE>(in.get());
-        }
     }
 }
 
@@ -581,14 +637,15 @@ int Huffman::Binary::WriteBinary(
 #ifdef DEBUG
     assert(out.is_open());
 #endif
-    if (size > ULONG_MAX) {
+
+    if (size > MAX_NUMB) {
         std::cerr << "Error in func <WriteBinary>: var <size> max-value is "
-                  << ULONG_MAX << std::endl;
+                  << MAX_NUMB << std::endl;
         return 1;
     }
 
-    for(int k = 3; k != -1; --k) {
-        out.put(static_cast<char>((size >> (BYTE_SIZE * k)) % Huffman::BYTE_COUNT));
+    for(int k = BYTES_NUMB - 1; k != -1; --k) {
+        out.put(static_cast<char>((size >> (BYTE_SIZE * k)) % BYTE_COUNT));
     }
     return 0;
 }
@@ -600,10 +657,24 @@ size_t Huffman::Binary::ReadBinary(std::fstream &in){
 #endif
     size_t num = 0;
     size_t c = 0;
-    for(int k = 3; k != -1; --k) {
+    for(int k = BYTES_NUMB - 1; k != -1; --k) {
         c = static_cast<Huffman::BYTE>(in.get());
+        CheckReadingUnexpectedEndOfFile(__func__, in);
         num += c * (1 << (BYTE_SIZE * k));
     }
     return num;
 }
+
+void CheckReadingUnexpectedEndOfFile(
+        const std::string  &funcName,
+        const std::fstream &in) {
+    if(in.eof()) {
+        std::stringstream s;
+        s << funcName
+          << " : "
+          << "unexpected end of file";
+        throw Huffman::HuffmanExceptionInvalidArchive(s.str());
+    }
+}
+
 

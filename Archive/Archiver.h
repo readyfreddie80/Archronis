@@ -19,7 +19,7 @@ public:
             const Vector<std::string> &filesNames,
             const std::string         &archiveName);
 
-    void Decompress(const std::string &archiveName);
+    Vector<std::string> Decompress(const std::string &archiveName);
 
     Archiver() = default;
 
@@ -28,7 +28,7 @@ private:
     static constexpr char INFO_FILE_NAME[] = "ArchronisInfo";
 
     Huffman huffman;
-};
 
+};
 
 #endif //ARCHRONIS_ARCHIVER_H

@@ -52,16 +52,27 @@ int main(int argc, char *argv[]) {
         }
         std::cout << "Compressing into "
                   << argv[archiveNameIdx]
+                  << "..."
                   << std::endl;
         archive.Compress(filesNames, argv[archiveNameIdx]);
-        std::cout << "Compressing finished successfully!";
+        std::cout << "Compressing finished successfully!"
+                  << std::endl;;
 
     } else {
         std::cout << "Decompressing from "
                   << argv[archiveNameIdx]
+                  << "..."
                   << std::endl;
-        archive.Decompress(argv[archiveNameIdx]);
-        std::cout << "Decompressing finished successfully!";
+        Vector<std::string> filesNames = archive.Decompress(argv[archiveNameIdx]);
+        std::cout << "Decompressing finished successfully!"
+                  << std::endl
+                  << "Decompressed files:"
+                  << std::endl;
+
+        for (size_t i = 0; i < filesNames.getSize(); ++i) {
+            std::cout << filesNames[i]
+                      << std::endl;
+        }
     }
         return 0;
 }

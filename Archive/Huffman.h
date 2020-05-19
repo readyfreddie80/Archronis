@@ -22,7 +22,7 @@ public:
             Vector<File> &filesNames,
             std::fstream &archive);
 
-    void Decompress(
+    Vector<std::string> Decompress(
                   std::fstream &archive,
             const InfoFile     &infoFile);
 
@@ -40,6 +40,25 @@ public:
         bool operator>(const Letter & L) const {
             return frequency > L.frequency;
         }
+    };
+
+    class HuffmanException: public std::exception {
+    protected:
+        std::string error_;
+
+    public:
+        explicit HuffmanException(const std::string &error)
+                : error_(error) {}
+
+        const char* what() const noexcept override {
+            return error_.c_str();
+        }
+    };
+
+    class HuffmanExceptionInvalidArchive: public HuffmanException {
+    public:
+        explicit HuffmanExceptionInvalidArchive(const std::string &error)
+                : HuffmanException(error) {}
     };
 
 protected:
@@ -113,6 +132,8 @@ protected:
                   size_t             size);
 
     class Binary {
+        static const size_t MAX_NUMB = ULONG_MAX;
+        static const size_t BYTES_NUMB = 4;
     public:
         int WriteBinary(
                 std::fstream  &out,
@@ -120,8 +141,12 @@ protected:
 
         size_t ReadBinary(std::fstream &in);
     };
+
+
 };
 
-
+void CheckReadingUnexpectedEndOfFile(
+        const std::string  &funcName,
+        const std::fstream &in);
 
 #endif //ARCHRONIS_HUFFMAN_H
